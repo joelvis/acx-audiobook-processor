@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, send_file, jsonify
 from werkzeug.utils import secure_filename
 from utils.audio_processor import process_audio_file
 import tempfile
+from pathlib import Path
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -30,12 +31,14 @@ def upload_file():
         return jsonify({'error': 'No file selected'}), 400
     
     if not allowed_file(file.filename):
-        return jsonify({'error': 'Invalid file type'}), 400
+        return jsonify({'error': 'Invalid file type. Only MP3 and WAV files are supported'}), 400
 
     try:
         filename = secure_filename(file.filename)
+        # Always use .mp3 extension for output file
+        output_filename = Path(filename).stem + '.mp3'
         temp_input = os.path.join(app.config['UPLOAD_FOLDER'], f"input_{filename}")
-        temp_output = os.path.join(app.config['UPLOAD_FOLDER'], f"processed_{filename}")
+        temp_output = os.path.join(app.config['UPLOAD_FOLDER'], f"processed_{output_filename}")
         
         file.save(temp_input)
         
@@ -46,7 +49,7 @@ def upload_file():
         return send_file(
             temp_output,
             as_attachment=True,
-            download_name=f"ACX_processed_{filename}",
+            download_name=f"ACX_processed_{output_filename}",
             mimetype='audio/mpeg'
         )
     
