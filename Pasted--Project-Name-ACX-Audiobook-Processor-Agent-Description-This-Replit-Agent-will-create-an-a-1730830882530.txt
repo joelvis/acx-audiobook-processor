@@ -1,0 +1,70 @@
+**Project Name**: ACX Audiobook Processor Agent
+
+**Description**:
+This Replit Agent will create an audiobook processing tool that ensures audio files meet ACX standards. The tool will allow users to upload their raw audio files, process them using an automated effects chain, and download the final ACX-compliant version. This agent uses Flask for creating the web interface, Pydub for processing audio, and FFmpeg to apply effects such as noise reduction, normalization, compression, and limiting.
+
+**Specifications**:
+1. **Web Technologies**:
+   - **Frontend**: HTML for the user interface, CSS for styling, and JavaScript for interactivity.
+   - **Backend**: Python (Flask framework) for server-side logic.
+   - **Libraries**: Pydub for audio processing, FFmpeg for command-line audio editing.
+
+2. **Functional Requirements**:
+   - Users can **upload audio files** (MP3, WAV).
+   - Audio files are processed using an effects chain to meet **ACX standards**, including:
+     - **Noise Reduction** to remove background noise.
+     - **High-Pass Filtering** at 80-100 Hz to eliminate low-frequency rumble.
+     - **Compression** to even out dynamic range (e.g., Threshold: -18 dB, Ratio: 2:1).
+     - **Normalization** to set the peak to -3 dB.
+     - **RMS Normalization** to adjust the overall volume to -20 dB RMS.
+     - **Limiting** to ensure the final audio does not exceed -3 dB peaks.
+   - **Processed files** can be downloaded in **192 kbps CBR MP3** format with a 44.1 kHz sample rate.
+   - Provides **feedback** if audio does not meet ACX requirements after processing.
+
+3. **Frontend Details**:
+   - **HTML**: A simple file upload form.
+   - **CSS (Optional)**: Styling for the upload form, buttons, and layout to make it visually appealing.
+   - **JavaScript (Optional)**:
+     - Adds loading indicators while audio is being processed.
+     - Form validation to ensure users upload valid audio files.
+
+4. **Backend Specifications**:
+   - **Flask** handles HTTP requests for uploading files and sending back processed files.
+   - **Audio Processing Flow**:
+     1. **Receive File**: User uploads an audio file via the HTML form.
+     2. **Noise Reduction**: Reduce background noise with FFmpeg and Pydub.
+     3. **High-Pass Filter**: Apply high-pass filtering to remove unwanted low-frequency sounds.
+     4. **Compression & Normalization**: Use FFmpeg to compress and normalize audio.
+     5. **Export File**: Convert processed file to MP3 format and allow the user to download it.
+
+5. **Cloud Deployment**:
+   - Deploy the application on **Replit**.
+   - Use **Replit's web hosting** to serve the Flask application publicly.
+
+6. **Instructions to Set Up on Replit**:
+   1. **Create a New Repl**: Choose Python as the language and name your project.
+   2. **Install Dependencies**:
+      - In the "Packages" tab, install **Flask** and **Pydub**.
+      - Run the following in the Replit Shell to set up **FFmpeg**:
+        ```bash
+        curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz | tar xJ
+        mv ffmpeg-*-static/ffmpeg .
+        mv ffmpeg-*-static/ffprobe .
+        ```
+   3. **Create the Backend**:
+      - Use **Flask** to handle file uploads and manage server-side operations.
+      - Write Python scripts to use **Pydub** and **FFmpeg** for audio processing.
+   4. **Create the Frontend**:
+      - Add an HTML file (`index.html`) for the user interface, where users can upload their files.
+      - Add optional **CSS** for styling and **JavaScript** for dynamic interactions.
+   5. **Run and Test**:
+      - Run the Repl and open the generated URL to test the upload, processing, and download workflow.
+   6. **Deploy**:
+      - Use Replit's "Deploy" button to make your app accessible to others.
+
+**Additional Notes**:
+- This Replit Agent should provide real-time feedback for each step of the audio processing flow to ensure a user-friendly experience.
+- The goal is to automate ACX compliance while keeping the interface simple enough for non-technical users.
+
+**Deployment URL**: Once deployed, users will receive a URL to access the web application and start processing their audiobook files for ACX compliance.
+
