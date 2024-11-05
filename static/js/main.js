@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const processButton = document.getElementById('processButton');
     const processingStatus = document.getElementById('processingStatus');
     const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Show processing status
         showProcessing(true);
+        hideSuccess();
         
         const formData = new FormData();
         formData.append('file', file);
@@ -44,6 +46,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            // Show success message
+            showSuccess('Processing complete! Your file has been downloaded.');
             
         } catch (error) {
             showError(error.message);
@@ -61,5 +67,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function showError(message) {
         errorMessage.textContent = message;
         errorMessage.classList.remove('d-none');
+        successMessage.classList.add('d-none');
+    }
+
+    function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.classList.remove('d-none');
+        errorMessage.classList.add('d-none');
+    }
+
+    function hideSuccess() {
+        successMessage.classList.add('d-none');
     }
 });
