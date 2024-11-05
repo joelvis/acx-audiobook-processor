@@ -40,8 +40,6 @@ def process_audio_file(input_path, output_path):
             '-i', input_path,
             '-af',
             # Combine all audio filters in one chain
-            'silenceremove=start_periods=1:start_duration=0.1:start_threshold=-60dB:detection=peak,'
-            'silenceremove=stop_periods=1:stop_duration=0.1:stop_threshold=-60dB:detection=peak,'
             'adelay=2000|2000,'  # Add 2s silence at start
             'apad=pad_dur=2,'    # Add 2s silence at end
             'highpass=f=80,'     # High-pass filter at 80Hz
