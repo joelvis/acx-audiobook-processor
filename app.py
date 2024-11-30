@@ -67,9 +67,13 @@ def upload_file():
             mimetype='audio/mpeg'
         )
         
-        # Add Content-Disposition header
-        response.headers['Content-Disposition'] = f'attachment; filename="{download_name}"'
-        response.headers['Content-Type'] = 'audio/mpeg'
+        # Set proper headers for download
+        response.headers.set('Content-Type', 'audio/mpeg')
+        response.headers.set('Content-Disposition', f'attachment; filename="{download_name}"')
+        response.headers.set('Access-Control-Expose-Headers', 'Content-Disposition')
+        response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+        response.headers.set('Pragma', 'no-cache')
+        response.headers.set('Expires', '0')
         
         return response
     

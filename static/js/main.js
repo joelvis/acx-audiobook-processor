@@ -16,6 +16,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Validate file type
+        const validTypes = ['audio/mpeg', 'audio/wav', 'audio/x-wav'];
+        if (!validTypes.includes(file.type)) {
+            showError('Invalid file type. Please upload an MP3 or WAV file.');
+            return;
+        }
+
         // Show processing status
         showProcessing(true);
         hideSuccess();
@@ -34,25 +41,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error(errorData.error || 'Processing failed');
             }
 
+            // Get filename from Content-Disposition header
+            const contentDisposition = response.headers.get('Content-Disposition');
+            const filenameMatch = contentDisposition ? contentDisposition.match(/filename="(.+)"/) : null;
+            const filename = filenameMatch ? filenameMatch[1] : 'processed_audio.mp3';
+
             // Get the processed file
             const blob = await response.blob();
+            
+            // Create download URL
             const url = window.URL.createObjectURL(blob);
             
-            // Create and trigger download
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = response.headers.get('content-disposition')?.split('filename=')[1] || 'processed_audio.mp3';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            // Create and configure download link
+            const downloadLink = document.createElement('a');
+            downloadLink.style.display = 'none';
+            downloadLink.href = url;
+            downloadLink.download = filename;
             
-            // Show success message
-            showSuccess('Processing complete! Your file has been downloaded.');
+            // Append, click, and cleanup
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(downloadLink);
+            }, 100);
+            
+            // Show success message with filename
+            showSuccess(`Processing complete! Your file "${filename}" has been processed and downloaded.`);
+            
+            // Reset form
+            form.reset();
             
         } catch (error) {
-            showError(error.message);
+            console.error('Processing error:', error);
+            showError(error.message || 'An error occurred while processing the audio file.');
         } finally {
             showProcessing(false);
         }
