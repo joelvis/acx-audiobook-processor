@@ -1,9 +1,14 @@
 import os
+import logging
 from flask import Flask, render_template, request, send_file, jsonify
 from werkzeug.utils import secure_filename
 from utils.audio_processor import process_audio_file
 import tempfile
 from pathlib import Path
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -25,6 +30,7 @@ def index():
 def upload_file():
     temp_input = None
     temp_output = None
+    logger.info("Starting file upload process")
     
     try:
         # Input file validation

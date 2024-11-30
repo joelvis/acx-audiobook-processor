@@ -76,7 +76,19 @@ document.addEventListener('DOMContentLoaded', function() {
             
         } catch (error) {
             console.error('Processing error:', error);
-            showError(error.message || 'An error occurred while processing the audio file.');
+            let errorMessage = 'An error occurred while processing the audio file.';
+            
+            // Try to parse detailed error message from response
+            if (error.message) {
+                try {
+                    const errorData = JSON.parse(error.message);
+                    errorMessage = errorData.error || error.message;
+                } catch (e) {
+                    errorMessage = error.message;
+                }
+            }
+            
+            showError(`Processing failed: ${errorMessage}`);
         } finally {
             showProcessing(false);
         }
