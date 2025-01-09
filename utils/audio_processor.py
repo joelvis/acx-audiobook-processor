@@ -11,32 +11,36 @@ def validate_audio_file(input_path):
         cmd = ['ffmpeg', '-i', input_path]
         result = subprocess.run(cmd, stderr=subprocess.PIPE, text=True)
         output = result.stderr.lower()
-        
+
         # Check if it's an audio file
         if 'audio:' not in output:
             raise Exception("Not a valid audio file")
-            
+
         # Get file extension
         ext = Path(input_path).suffix.lower()
         if ext not in ['.mp3', '.wav']:
             raise Exception("Unsupported file format. Only MP3 and WAV files are supported")
-            
+
         return True
-        
+
     except subprocess.CalledProcessError as e:
         raise Exception(f"Error validating audio file: {str(e)}")
 
 def process_audio_file(input_path, output_path):
     """
-    Process audio file according to ACX standards using FFmpeg with metadata stripping
+    Process audio file according to ACX standards using FFmpeg with complete metadata stripping
     """
     try:
         # Validate input file
         validate_audio_file(input_path)
 
-        # FFmpeg command chain for ACX processing
+        # Create a temporary file for intermediate processing
+        temp_output = output_path + ".temp.mp3"
+
+        # First pass: Strip metadata and process audio
         ffmpeg_command = [
             'ffmpeg', '-y',  # Force overwrite output file
+            '-fflags', '+bitexact',  # Ensure bit-exact output
             '-i', input_path,
             '-map_metadata', '-1',  # Strip all metadata
             '-af',
@@ -56,12 +60,43 @@ def process_audio_file(input_path, output_path):
             '-id3v2_version', '0',  # Remove ID3 tags
             '-write_xing', '0',     # Remove Xing/Info tags
             '-write_id3v1', '0',    # Remove ID3v1 tags
+            '-map_chapters', '-1',   # Remove chapters
+            '-metadata', 'title=',   # Clear title
+            '-metadata', 'artist=',  # Clear artist
+            '-metadata', 'album=',   # Clear album
+            '-metadata', 'comment=', # Clear comment
+            '-metadata', 'encoded_by=', # Clear encoder info
+            '-metadata', 'copyright=',  # Clear copyright
+            '-metadata', 'creation_time=', # Clear creation time
+            '-metadata', 'date=',         # Clear date
+            '-metadata', 'encoder=',      # Clear encoder
+            '-metadata', 'publisher=',    # Clear publisher
             '-f', 'mp3',         # Force MP3 format
+            temp_output
+        ]
+
+        # Execute first FFmpeg command
+        subprocess.run(ffmpeg_command, check=True, capture_output=True, text=True)
+
+        # Second pass: Final cleanup of any remaining metadata
+        final_command = [
+            'ffmpeg', '-y',
+            '-fflags', '+bitexact',
+            '-i', temp_output,
+            '-codec', 'copy',
+            '-map_metadata', '-1',
+            '-id3v2_version', '0',
+            '-write_xing', '0',
+            '-write_id3v1', '0',
             output_path
         ]
 
-        # Execute FFmpeg command
-        subprocess.run(ffmpeg_command, check=True, capture_output=True, text=True)
+        # Execute second FFmpeg command
+        subprocess.run(final_command, check=True, capture_output=True, text=True)
+
+        # Clean up temporary file
+        if os.path.exists(temp_output):
+            os.remove(temp_output)
 
         return True
 
