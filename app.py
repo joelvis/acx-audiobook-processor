@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')
 
 # Configure upload settings
 ALLOWED_EXTENSIONS = {'mp3', 'wav'}
@@ -20,6 +20,10 @@ def allowed_file(filename):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/health')
+def health():
+    return jsonify({'status': 'ok'})
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
