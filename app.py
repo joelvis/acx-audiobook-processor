@@ -7,6 +7,8 @@ from pathlib import Path
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY')
+if not app.secret_key:
+    raise RuntimeError('FLASK_SECRET_KEY must be set')
 
 # Configure upload settings
 ALLOWED_EXTENSIONS = {'mp3', 'wav'}
