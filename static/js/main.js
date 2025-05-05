@@ -20,10 +20,37 @@ document.addEventListener('DOMContentLoaded', function() {
         showProcessing(true);
         hideSuccess();
         
+        // Create FormData for the file
         const formData = new FormData();
         formData.append('file', file);
 
         try {
+            // First, get an estimate of processing time
+            const estimateFormData = new FormData();
+            estimateFormData.append('file', file);
+            
+            // Get the estimate
+            const estimateResponse = await fetch('/estimate', {
+                method: 'POST',
+                body: estimateFormData
+            });
+            
+            if (!estimateResponse.ok) {
+                const errorData = await estimateResponse.json();
+                throw new Error(errorData.error || 'Estimation failed');
+            }
+            
+            // Get estimate data
+            const estimateData = await estimateResponse.json();
+            const minutes = estimateData.estimatedMinutes;
+            const fileSize = estimateData.fileSize;
+            
+            // Update UI with estimate
+            document.getElementById('processingMessage').textContent = 'Processing your audio file...';
+            document.getElementById('estimatedTime').innerHTML = 
+                `<strong>Estimated time:</strong> ${minutes} minute${minutes !== 1 ? 's' : ''} (${fileSize} MB)`;
+            
+            // Now proceed with actual upload and processing
             const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData
