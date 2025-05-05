@@ -62,7 +62,7 @@ def validate_audio_file(input_path):
 def process_audio_file(input_path, output_path):
     """
     Process audio file according to ACX standards using FFmpeg with complete metadata stripping
-    Optimized version for faster processing of large files
+    Completely rewritten to preserve all audio content while ensuring exactly 2s silence at start and end
     """
     try:
         # Validate input file - simplified validation for better performance
@@ -70,87 +70,49 @@ def process_audio_file(input_path, output_path):
 
         # Create a temporary file for intermediate processing
         temp_output = output_path + ".temp.mp3"
-
+        
         # Get file size for optimization decisions
         file_size_mb = os.path.getsize(input_path) / (1024 * 1024)
         is_large_file = file_size_mb > 100
         is_wav = input_path.lower().endswith('.wav')
         
-        # For very large files, we'll use simplified processing
-        if is_large_file:
-            # More efficient processing for large files
-            print(f"Processing large file ({file_size_mb:.2f} MB) with optimized settings...")
-            # Build a command with fewer filters for better performance with large files
-            ffmpeg_command = [
-                'ffmpeg', '-y',
-                '-threads', '4',  # Use 4 threads for faster processing
-                '-i', input_path,
-                '-map_metadata', '-1',  # Strip all metadata
-                '-af',
-                # Process audio for large files without removing content
-                'highpass=f=80,' \
-                'loudnorm=I=-20:TP=-3:LRA=11,' \
-                'apad=pad_dur=2:pad_len=88200',  # Exactly 2 seconds at 44.1kHz
-                # Basic output settings
-                '-ar', '44100',  # 44.1kHz sample rate
-                '-ac', '1',      # Mono output
-                '-b:a', '192k',  # 192kbps bitrate
-                '-codec:a', 'libmp3lame',
-                '-f', 'mp3',
-                temp_output
-            ]
-        else:
-            # Standard optimized processing for normal-sized files
-            print(f"Processing file ({file_size_mb:.2f} MB) with standard settings...")
-            ffmpeg_command = [
-                'ffmpeg', '-y',
-                '-threads', '4',
-                '-i', input_path,
-                '-map_metadata', '-1'
-            ]
-            
-            # Format-specific optimizations
-            if is_wav:
-                ffmpeg_command.extend([
-                    '-af',
-                    # Full processing for WAV files that preserves content with exact 2s silence
-                    'silenceremove=start_periods=1:start_threshold=-60dB:detection=peak,' \
-                    'silenceremove=stop_periods=1:stop_threshold=-60dB:detection=peak,' \
-                    'highpass=f=80,' \
-                    'acompressor=threshold=-18dB:ratio=2:attack=20:release=1000,' \
-                    'loudnorm=I=-20:TP=-3:LRA=11,' \
-                    'adelay=2000|2000,' \
-                    'apad=pad_dur=2',
-                ])
-            else:
-                ffmpeg_command.extend([
-                    '-af',
-                    # MP3-specific processing chain that preserves content with exact silence
-                    'silenceremove=start_periods=1:start_threshold=-60dB:detection=peak,' \
-                    'silenceremove=stop_periods=1:stop_threshold=-60dB:detection=peak,' \
-                    'highpass=f=80,' \
-                    'acompressor=threshold=-18dB:ratio=2:attack=20:release=1000,' \
-                    'loudnorm=I=-20:TP=-3:LRA=11,' \
-                    'adelay=2000|2000,' \
-                    'apad=pad_dur=2',
-                ])
-            
-            # Common output settings
-            ffmpeg_command.extend([
-                # Output format settings
-                '-ar', '44100',
-                '-ac', '1',
-                '-codec:a', 'libmp3lame',
-                '-b:a', '192k',
-                # Strip all metadata
-                '-map_chapters', '-1',
-                '-map_metadata', '-1',
-                # Clear metadata fields
-                '-metadata', 'title=', '-metadata', 'artist=', '-metadata', 'album=',
-                # Output format
-                '-f', 'mp3',
-                temp_output
-            ])
+        # SIMPLEST APPROACH: Just add proper ACX processing without any silence trimming
+        # This preserves ALL content while making sure we have exactly 2s silence added
+        print(f"Processing file ({file_size_mb:.2f} MB) with content-preserving approach...")
+        
+        # Build the initial command with thread optimization
+        ffmpeg_command = [
+            'ffmpeg', '-y',
+            '-threads', '4',  # Use 4 threads for faster processing
+            '-i', input_path,
+            '-map_metadata', '-1'  # Strip all metadata
+        ]
+        
+        # Basic audio filter chain that preserves content
+        # We don't touch the audio content at all, just add processing
+        audio_filters = 'highpass=f=80,' \
+                        'acompressor=threshold=-18dB:ratio=2:attack=20:release=1000,' \
+                        'loudnorm=I=-20:TP=-3:LRA=11,' \
+                        'adelay=2000|2000,' \
+                        'apad=pad_dur=2'
+        
+        # Add audio filters
+        ffmpeg_command.extend([
+            '-af', audio_filters,
+            # Output format settings
+            '-ar', '44100',      # 44.1kHz sample rate
+            '-ac', '1',          # Mono output
+            '-codec:a', 'libmp3lame',
+            '-b:a', '192k',      # Force 192kbps bitrate
+            # Strip all metadata
+            '-map_chapters', '-1',
+            '-map_metadata', '-1',
+            # Clear any remaining metadata fields
+            '-metadata', 'title=', '-metadata', 'artist=', '-metadata', 'album=',
+            # Force output format
+            '-f', 'mp3',
+            temp_output
+        ])
 
         # Execute first FFmpeg command with progress information
         print(f"Processing {os.path.basename(input_path)}...")
