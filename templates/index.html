@@ -54,9 +54,11 @@
                 <div class="status-section">
                     <div id="processingStatus" class="d-none">
                         <div class="processing-indicator">
-                            <img src="{{ url_for('static', filename='img/loading.svg') }}" alt="Processing" class="me-2">
-                            <span id="processingMessage">Processing your audio file...</span>
-                            <div id="estimatedTime" class="small text-muted mt-1"></div>
+                            <div>
+                                <img src="{{ url_for('static', filename='img/loading.svg') }}" alt="Processing">
+                                <span id="processingMessage">Processing your audio file...</span>
+                            </div>
+                            <div id="estimatedTime"></div>
                         </div>
                     </div>
                     <div id="successMessage" class="alert alert-success py-1 px-2 small-message d-none"></div>

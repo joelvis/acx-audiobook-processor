@@ -70,14 +70,32 @@ body {
 
 .processing-indicator {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     font-size: 0.8rem;
     margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--bs-secondary-bg);
+    border-radius: 0.25rem;
+}
+
+.processing-indicator > div:first-of-type {
+    display: flex;
+    align-items: center;
+    width: 100%;
 }
 
 #processingStatus img {
     width: 16px;
     height: 16px;
+    margin-right: 0.5rem;
+}
+
+#estimatedTime {
+    text-align: center;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    color: var(--bs-info);
+    width: 100%;
 }
 
 .small-message {
