@@ -8,67 +8,57 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container-fluid py-2">
+    <div class="container-fluid fixed-height">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h3 class="m-0">ACX Audiobook Processor</h3>
-                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="collapse" data-bs-target="#processingInfo" aria-expanded="false">
-                                Process Info
-                            </button>
-                        </div>
-                        
-                        <div id="processingInfo" class="collapse">
-                            <div class="alert alert-info p-2 mb-3">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <small>
-                                            <ul class="mb-0 ps-3">
-                                                <li>Noise Reduction</li>
-                                                <li>High-Pass Filtering (80Hz)</li>
-                                                <li>Compression (2:1 ratio)</li>
-                                                <li>Normalization (-3dB peak)</li>
-                                            </ul>
-                                        </small>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <small>
-                                            <ul class="mb-0 ps-3">
-                                                <li>RMS Normalization (-20dB)</li>
-                                                <li>Limiting</li>
-                                                <li>2 seconds silence padding</li>
-                                                <li>Mono output conversion</li>
-                                            </ul>
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form id="uploadForm" class="mt-2">
-                            <div class="input-group mb-2">
-                                <input type="file" class="form-control form-control-sm" id="audioFile" accept=".mp3,.wav" required>
-                                <button type="submit" class="btn btn-primary" id="processButton">
-                                    Process Audio
-                                </button>
-                            </div>
-                        </form>
-
+                <div class="simple-header">
+                    <h4 class="m-0">ACX Audiobook Processor</h4>
+                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="collapse" data-bs-target="#processingInfo" aria-expanded="false">
+                        Process Info
+                    </button>
+                </div>
+                
+                <div id="processingInfo" class="collapse">
+                    <div class="info-box">
                         <div class="row">
-                            <div class="col-12">
-                                <div id="processingStatus" class="d-none">
-                                    <div class="d-flex align-items-center">
-                                        <img src="{{ url_for('static', filename='img/loading.svg') }}" alt="Processing" class="me-2">
-                                        <span>Processing your audio file...</span>
-                                    </div>
-                                </div>
-                                <div id="successMessage" class="alert alert-success py-2 px-3 mb-0 mt-2 d-none"></div>
-                                <div id="errorMessage" class="alert alert-danger py-2 px-3 mb-0 mt-2 d-none"></div>
+                            <div class="col-6">
+                                <ul class="compact-list">
+                                    <li>Noise Reduction</li>
+                                    <li>High-Pass Filtering (80Hz)</li>
+                                    <li>Compression (2:1 ratio)</li>
+                                    <li>Normalization (-3dB peak)</li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <ul class="compact-list">
+                                    <li>RMS Normalization (-20dB)</li>
+                                    <li>Limiting</li>
+                                    <li>2 seconds silence padding</li>
+                                    <li>Mono output conversion</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div class="control-section">
+                    <form id="uploadForm">
+                        <div class="file-control-group">
+                            <input type="file" class="control-file" id="audioFile" accept=".mp3,.wav" required>
+                            <button type="submit" class="btn btn-primary btn-sm" id="processButton">Process Audio</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="status-section">
+                    <div id="processingStatus" class="d-none">
+                        <div class="processing-indicator">
+                            <img src="{{ url_for('static', filename='img/loading.svg') }}" alt="Processing" class="me-2">
+                            <span>Processing your audio file...</span>
+                        </div>
+                    </div>
+                    <div id="successMessage" class="alert alert-success py-1 px-2 small-message d-none"></div>
+                    <div id="errorMessage" class="alert alert-danger py-1 px-2 small-message d-none"></div>
                 </div>
             </div>
         </div>
