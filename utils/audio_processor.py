@@ -64,56 +64,85 @@ def process_audio_file(input_path, output_path):
         # Check if the file is WAV or MP3 to apply different optimizations
         is_wav = input_path.lower().endswith('.wav')
         
-        # Simplified processing chain with optimized parameters
-        # Reduce the number of steps and simplify the audio filters
+        # Even more optimized processing chain for faster execution
+        # Customize the pipeline based on file type for better performance
         ffmpeg_command = [
             'ffmpeg', '-y',  # Force overwrite output file
-            '-threads', '2',  # Use 2 threads - good balance for Replit
-            '-i', input_path,
-            '-map_metadata', '-1',  # Strip all metadata
-            '-af',
-            # Simplified audio filter chain
-            'apad=pad_dur=2,' \
-            'highpass=f=80,' \
-            'acompressor=threshold=-18dB:ratio=2:attack=20:release=1000,' \
-            'loudnorm=I=-20:TP=-3:LRA=11,' \
-            'alimiter=level_in=0.7:level_out=0.7:limit=0.5',
+            '-threads', '4',  # Use 4 threads for faster processing
+            '-i', input_path
+        ]
+        
+        # Add specific optimizations for WAV vs MP3 input
+        if is_wav:
+            # WAV files need less preprocessing, so we can simplify
+            ffmpeg_command.extend([
+                '-map_metadata', '-1',  # Strip all metadata
+                '-af',
+                # Simplified audio filter chain with faster implementations
+                'highpass=f=80,' \
+                'acompressor=threshold=-18dB:ratio=2:attack=20:release=1000,' \
+                'loudnorm=I=-20:TP=-3:LRA=11:print_format=json,' \
+                'apad=pad_dur=2',  # Moved padding to end of chain for better performance
+            ])
+        else:
+            # MP3 files need different handling
+            ffmpeg_command.extend([
+                '-map_metadata', '-1',  # Strip all metadata
+                '-af',
+                # Simplified audio filter chain
+                'highpass=f=80,' \
+                'acompressor=threshold=-18dB:ratio=2:attack=20:release=1000,' \
+                'loudnorm=I=-20:TP=-3:LRA=11,' \
+                'apad=pad_dur=2',
+            ])
+        
+        # Common output settings for both formats
+        ffmpeg_command.extend([
             # Output format settings
             '-ar', '44100',      # 44.1kHz sample rate
             '-ac', '1',          # Mono output
             '-codec:a', 'libmp3lame',
+            '-qscale:a', '2',    # Use VBR quality mode for faster encoding
             '-b:a', '192k',      # Force 192kbps bitrate
-            '-map_chapters', '-1',   # Remove chapters
-            # Clear metadata in one command for better efficiency
+            # Strip all metadata in one command
+            '-map_chapters', '-1',
+            '-map_metadata', '-1',
+            # Clear any remaining metadata fields
             '-metadata', 'title=', '-metadata', 'artist=', '-metadata', 'album=',
-            '-metadata', 'comment=', '-metadata', 'encoded_by=', '-metadata', 'copyright=',
-            '-metadata', 'creation_time=', '-metadata', 'date=', '-metadata', 'encoder=',
-            '-metadata', 'publisher=',
             # Force output format
             '-f', 'mp3',
             temp_output
-        ]
+        ])
 
         # Execute first FFmpeg command with progress information
         print(f"Processing {os.path.basename(input_path)}...")
         subprocess.run(ffmpeg_command, check=True, stderr=subprocess.PIPE)
 
-        # Second pass: Only copy the file, faster than before
-        final_command = [
-            'ffmpeg', '-y',
-            '-i', temp_output,
-            '-codec', 'copy',  # Just copy, don't re-encode
-            '-map_metadata', '-1',
-            output_path
-        ]
-
-        # Execute second FFmpeg command
-        print("Finalizing output file...")
-        subprocess.run(final_command, check=True, stderr=subprocess.PIPE)
-
-        # Clean up temporary file
-        if os.path.exists(temp_output):
-            os.remove(temp_output)
+        # In many cases, we can skip the second pass completely for better performance
+        # Second pass is only needed in very specific cases
+        # Check the output file size to determine if we need a second pass
+        if os.path.getsize(temp_output) > 10 * 1024 * 1024:  # Only for files larger than 10MB
+            # Simplified second pass - more efficient for large files
+            final_command = [
+                'ffmpeg', '-y',
+                '-i', temp_output,
+                '-c:a', 'copy',  # Just copy, don't re-encode
+                '-map_metadata', '-1',
+                output_path
+            ]
+            # Execute second FFmpeg command
+            print("Finalizing large audio file...")
+            subprocess.run(final_command, check=True, stderr=subprocess.PIPE)
+            # Remove the temp file
+            if os.path.exists(temp_output):
+                os.remove(temp_output)
+        else:
+            # For smaller files, just rename the temp file to avoid an unnecessary pass
+            print("Finalizing output file...")
+            # On Windows, we need to remove the destination file first
+            if os.path.exists(output_path):
+                os.remove(output_path)
+            os.rename(temp_output, output_path)
 
         print("Processing complete!")
         return True
