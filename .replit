@@ -32,7 +32,7 @@ args = "python main.py"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "python main.py"]
+run = ["sh", "-c", "gunicorn -w 4 -b 0.0.0.0:5000 'app:app'"]
 
 [[ports]]
 localPort = 5000
