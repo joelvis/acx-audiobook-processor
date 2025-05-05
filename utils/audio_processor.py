@@ -87,13 +87,10 @@ def process_audio_file(input_path, output_path):
                 '-i', input_path,
                 '-map_metadata', '-1',  # Strip all metadata
                 '-af',
-                # Simplified filter chain for large files with precise silence control
-                'silenceremove=start_periods=1:start_silence=1:start_threshold=-60dB,' \
-                'silenceremove=stop_periods=1:stop_silence=1:stop_threshold=-60dB,' \
+                # Process audio for large files without removing content
                 'highpass=f=80,' \
                 'loudnorm=I=-20:TP=-3:LRA=11,' \
-                'adelay=2000|2000,' \
-                'apad=pad_dur=2',
+                'apad=pad_dur=2:pad_len=88200',  # Exactly 2 seconds at 44.1kHz
                 # Basic output settings
                 '-ar', '44100',  # 44.1kHz sample rate
                 '-ac', '1',      # Mono output
@@ -116,9 +113,9 @@ def process_audio_file(input_path, output_path):
             if is_wav:
                 ffmpeg_command.extend([
                     '-af',
-                    # Full processing chain for WAV files with precise silence control
-                    'silenceremove=start_periods=1:start_silence=1:start_threshold=-60dB,' \
-                    'silenceremove=stop_periods=1:stop_silence=1:stop_threshold=-60dB,' \
+                    # Full processing for WAV files that preserves content with exact 2s silence
+                    'silenceremove=start_periods=1:start_threshold=-60dB:detection=peak,' \
+                    'silenceremove=stop_periods=1:stop_threshold=-60dB:detection=peak,' \
                     'highpass=f=80,' \
                     'acompressor=threshold=-18dB:ratio=2:attack=20:release=1000,' \
                     'loudnorm=I=-20:TP=-3:LRA=11,' \
@@ -128,9 +125,9 @@ def process_audio_file(input_path, output_path):
             else:
                 ffmpeg_command.extend([
                     '-af',
-                    # MP3-specific processing chain with precise silence control
-                    'silenceremove=start_periods=1:start_silence=1:start_threshold=-60dB,' \
-                    'silenceremove=stop_periods=1:stop_silence=1:stop_threshold=-60dB,' \
+                    # MP3-specific processing chain that preserves content with exact silence
+                    'silenceremove=start_periods=1:start_threshold=-60dB:detection=peak,' \
+                    'silenceremove=stop_periods=1:stop_threshold=-60dB:detection=peak,' \
                     'highpass=f=80,' \
                     'acompressor=threshold=-18dB:ratio=2:attack=20:release=1000,' \
                     'loudnorm=I=-20:TP=-3:LRA=11,' \
