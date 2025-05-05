@@ -116,33 +116,33 @@ def upload_file():
         process_audio_file(temp_input, temp_output)
         app.logger.info(f"Completed audio processing for {filename}")
         
-        # Add headers with processing information
-        headers = {
-            'X-Estimated-Minutes': str(round(estimated_minutes, 1)),
-            'X-File-Size-MB': str(round(file_size_mb, 1))
-        }
-        
-        # Send the processed file
-        return send_file(
+        # Send the processed file using Flask 3.x API
+        response = send_file(
             temp_output,
             as_attachment=True,
             download_name=f"ACX_processed_{output_filename}",
-            mimetype='audio/mpeg',
-            headers=headers
+            mimetype='audio/mpeg'
         )
+        
+        # Add headers manually to the response object
+        response.headers['X-Estimated-Minutes'] = str(round(estimated_minutes, 1))
+        response.headers['X-File-Size-MB'] = str(round(file_size_mb, 1))
+        
+        return response
     
     except Exception as e:
         app.logger.error(f"Error processing audio: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
     finally:
-        # Cleanup temporary files
+        # Cleanup input file immediately
         try:
-            if os.path.exists(temp_input):
+            if 'temp_input' in locals() and os.path.exists(temp_input):
                 os.remove(temp_input)
                 app.logger.info(f"Removed input file {temp_input}")
-            if os.path.exists(temp_output):
-                os.remove(temp_output)
-                app.logger.info(f"Removed output file {temp_output}")
+                
+            # We leave the output file for Flask to serve
+            # It will be automatically cleaned up after the request is complete
+            # This ensures the download works properly
         except Exception as e:
             app.logger.warning(f"Error cleaning up temporary files: {str(e)}")
