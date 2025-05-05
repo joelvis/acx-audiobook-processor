@@ -104,11 +104,15 @@ def process_audio_file(input_path, output_path):
             '-ac', '1',          # Mono output
             '-codec:a', 'libmp3lame',
             '-b:a', '192k',      # Force 192kbps bitrate
-            # Strip all metadata
+            # Comprehensive metadata stripping to ensure clean files
             '-map_chapters', '-1',
             '-map_metadata', '-1',
-            # Clear any remaining metadata fields
+            # Clear ALL metadata fields thoroughly to remove any trace of original metadata
             '-metadata', 'title=', '-metadata', 'artist=', '-metadata', 'album=',
+            '-metadata', 'comment=', '-metadata', 'genre=', '-metadata', 'copyright=',
+            '-metadata', 'description=', '-metadata', 'synopsis=', '-metadata', 'show=',
+            '-metadata', 'episode_id=', '-metadata', 'network=', '-metadata', 'url=',
+            '-id3v2_version', '0',  # Remove ID3v2 tags completely
             # Force output format
             '-f', 'mp3',
             temp_output
@@ -127,7 +131,12 @@ def process_audio_file(input_path, output_path):
                 'ffmpeg', '-y',
                 '-i', temp_output,
                 '-c:a', 'copy',  # Just copy, don't re-encode
+                # Extra thorough metadata removal for final pass
+                '-map_chapters', '-1',
                 '-map_metadata', '-1',
+                '-id3v2_version', '0',
+                '-metadata', 'title=', '-metadata', 'artist=', '-metadata', 'album=',
+                '-metadata', 'comment=', '-metadata', 'genre=', '-metadata', 'copyright=',
                 output_path
             ]
             # Execute second FFmpeg command
