@@ -40,16 +40,35 @@ def upload_file():
         return jsonify({'error': 'Invalid file type. Only MP3 and WAV files are supported'}), 400
 
     try:
+        # Get file size before saving to ensure it's not too large
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)  # Reset file pointer to beginning
+        
+        # Convert bytes to MB for readability
+        file_size_mb = file_size / (1024 * 1024)
+        
+        # Log file size for troubleshooting
+        app.logger.info(f"Upload file size: {file_size_mb:.2f} MB")
+        
+        # Check if file exceeds the configured size limit
+        if file_size > app.config['MAX_CONTENT_LENGTH']:
+            return jsonify({'error': f'File too large. Maximum allowed size is {app.config["MAX_CONTENT_LENGTH"] / (1024 * 1024)} MB'}), 413
+        
         filename = secure_filename(file.filename)
         # Always use .mp3 extension for output file
         output_filename = Path(filename).stem + '.mp3'
         temp_input = os.path.join(app.config['UPLOAD_FOLDER'], f"input_{filename}")
         temp_output = os.path.join(app.config['UPLOAD_FOLDER'], f"processed_{output_filename}")
         
+        # Save the file
         file.save(temp_input)
+        app.logger.info(f"Saved input file to {temp_input}")
         
-        # Process the audio file
+        # Process the audio file with more detailed logging
+        app.logger.info(f"Starting audio processing for {filename}")
         process_audio_file(temp_input, temp_output)
+        app.logger.info(f"Completed audio processing for {filename}")
         
         # Send the processed file
         return send_file(
@@ -60,11 +79,17 @@ def upload_file():
         )
     
     except Exception as e:
+        app.logger.error(f"Error processing audio: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
     finally:
         # Cleanup temporary files
-        if os.path.exists(temp_input):
-            os.remove(temp_input)
-        if os.path.exists(temp_output):
-            os.remove(temp_output)
+        try:
+            if os.path.exists(temp_input):
+                os.remove(temp_input)
+                app.logger.info(f"Removed input file {temp_input}")
+            if os.path.exists(temp_output):
+                os.remove(temp_output)
+                app.logger.info(f"Removed output file {temp_output}")
+        except Exception as e:
+            app.logger.warning(f"Error cleaning up temporary files: {str(e)}")
